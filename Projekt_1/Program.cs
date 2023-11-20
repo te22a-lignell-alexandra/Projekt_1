@@ -26,8 +26,9 @@ Raylib.InitWindow(800, 600, "screen");
 Raylib.SetTargetFPS(60);
 
 
+Texture2D characterImage = Raylib.LoadTexture("papillon.png");
+Rectangle characterRect = new Rectangle(400, 300, 64, 64);
 Vector2 movement = new Vector2(0,0);
-
 
 string scene = "start";
 int hp = 3;
@@ -44,23 +45,23 @@ while (!Raylib.WindowShouldClose())
             scene = "gröntRum";
         }
     }
-    else if (scene == "gröntRum")
+    else if (scene !="start")
     {
         movement = Vector2.Zero;
 
+        if (Raylib.IsKeyDown(KeyboardKey.KEY_A))
+        {
+            movement.X = -1;
+        }
         if (Raylib.IsKeyDown(KeyboardKey.KEY_D))
         {
             movement.X = 1;
-        }
-        else if (Raylib.IsKeyDown(KeyboardKey.KEY_A))
-        {
-            movement.X = -1;
         }
         if (Raylib.IsKeyDown(KeyboardKey.KEY_W))
         {
             movement.Y = -1;
         }
-        else if (Raylib.IsKeyDown(KeyboardKey.KEY_S))
+        if (Raylib.IsKeyDown(KeyboardKey.KEY_S))
         {
             movement.Y = 1;
         }
@@ -68,11 +69,24 @@ while (!Raylib.WindowShouldClose())
         {
             movement = Vector2.Normalize(movement) * speed;
         }
-        characterRect.x += movement.X;
-        characterRect.y += movement.Y;
+
+        characterRect.X += movement.X;
+        characterRect.Y+= movement.Y;
+    
+
+    if (characterRect.X > 800 - characterRect.Width || characterRect.X < 0)
+        {
+            characterRect.X -= movement.X;
+        }
+        if (characterRect.Y > 600 - characterRect.Height || characterRect.Y < 0)
+        {
+            characterRect.Y -= movement.Y;
+        }
+
     }
-
-
+// -----------------------------------------------------------------------------
+// DRAW
+// -----------------------------------------------------------------------------
 Raylib.BeginDrawing();
     if (scene == "start")
     {
@@ -81,8 +95,11 @@ Raylib.BeginDrawing();
     }
     else if (scene == "gröntRum")
     {
-        Raylib.DrawText($"{hp}", 10, 10, 10, Color.WHITE);
         Raylib.ClearBackground(Color.GREEN);
+        Raylib.DrawText($"{hp}", 10, 10, 30, Color.WHITE);
+        Raylib.DrawTexture(characterImage, (int)characterRect.X, (int)characterRect.Y, Color.WHITE);
     }
+
+    Raylib.EndDrawing();
 
 }
