@@ -42,6 +42,7 @@ Vector2 movement = new Vector2(0, 0);
 // LISTS
 List<Rectangle> doors = new();
 doors.Add(new Rectangle(0, 150, 10, 100));
+doors.Add(new Rectangle(790, 500, 10, 100));
 
 
 List<Rectangle> walls = new();
@@ -86,6 +87,10 @@ while (!Raylib.WindowShouldClose())
         {
             scene = "lilaRum";
         }
+        if (Raylib.CheckCollisionRecs(characterRect, doors[1]))
+        {
+            scene = "End";
+        }
     }
 
 
@@ -105,15 +110,21 @@ while (!Raylib.WindowShouldClose())
     // ROOM 1
     else if (scene == "gröntRum")
     {
-        DrawRoom(characterImage, characterRect, doors, walls, hp, Color.GREEN, Color.GOLD, Color.DARKPURPLE);
+        DrawRoom(characterImage, characterRect, doors, walls, hp, Color.GREEN, Color.GOLD, Color.DARKPURPLE, Color.GREEN);
     }
     // ROOM 2
     else if (scene == "lilaRum")
     {
-        DrawRoom(characterImage, characterRect, doors, walls, hp, Color.DARKPURPLE, Color.BLACK, Color.WHITE);
+        DrawRoom(characterImage, characterRect, doors, walls, hp, Color.DARKPURPLE, Color.BLACK, Color.DARKPURPLE, Color.WHITE);
     }
-    // För olika dörrar eller väggar synliga i olika rum??
-
+    // För olika dörrar eller väggar synliga i olika rum?? Kalla olika list items i varje?? Ändra, just nu finns båda alltid
+    
+    // FINAL ROOM
+    else if (scene == "End")
+    {
+        Raylib.ClearBackground(Color.GOLD);
+        Raylib.DrawText("YOU WON!", 280, 270, 50, Color.MAROON);
+    }
     Raylib.EndDrawing();
 }
 
@@ -173,21 +184,25 @@ static void DrawCharacter(Texture2D characterImage, Rectangle characterRect)
     Raylib.DrawTexture(characterImage, (int)characterRect.X, (int)characterRect.Y, Color.WHITE);
 }
 
-static void DrawRoom(Texture2D characterImage, Rectangle characterRect, List<Rectangle> doors, List<Rectangle> walls, int hp, Color bkgColor, Color wallColor, Color doorColor)
+static void DrawRoom(Texture2D characterImage, Rectangle characterRect, List<Rectangle> doors, List<Rectangle> walls, int hp, Color bkgColor, Color wallColor, Color doorColorA, Color doorColorB)
 {
     Raylib.ClearBackground(bkgColor);
     DrawHp(hp);
-    DrawCharacter(characterImage, characterRect);
+
+    Raylib.DrawRectangleRec(doors[0], doorColorA);
+    Raylib.DrawRectangleRec(doors[1], doorColorB);
 
     foreach (Rectangle wall in walls)
     {
         Raylib.DrawRectangleRec(wall, wallColor);
     }
 
-    foreach (Rectangle door in doors)
-    {
-        Raylib.DrawRectangleRec(door, doorColor);
-    }
+    DrawCharacter(characterImage, characterRect);
+
+    // foreach (Rectangle door in doors)
+    // {
+    //     Raylib.DrawRectangleRec(door, doorColor);
+    // }
 }
 
 // ---------------------------MOVEMENT-----------------------------------------
