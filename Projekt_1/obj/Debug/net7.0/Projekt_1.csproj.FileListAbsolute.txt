@@ -23,3 +23,6 @@ C:\Users\alexandra.lignell\Documents\Programmering\Projekt_1\Projekt_1\obj\Debug
 C:\Users\alexandra.lignell\Documents\Programmering\Projekt_1\Projekt_1\bin\Debug\net7.0\papillon.png
 C:\Users\alexandra.lignell\Documents\Programmering\Projekt_1\Projekt_1\bin\Debug\net7.0\enemy-ghost.png
 C:\Users\alexandra.lignell\Documents\Programmering\Projekt_1\Projekt_1\bin\Debug\net7.0\flame-sword.png
+C:\Users\alexandra.lignell\Documents\Programmering\Projekt_1\Projekt_1\bin\Debug\net7.0\meat.png
+C:\Users\alexandra.lignell\Documents\Programmering\Projekt_1\Projekt_1\bin\Debug\net7.0\poison-spider.png
+C:\Users\alexandra.lignell\Documents\Programmering\Projekt_1\Projekt_1\bin\Debug\net7.0\witch-hat.png

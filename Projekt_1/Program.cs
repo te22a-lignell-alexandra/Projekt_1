@@ -22,6 +22,8 @@
 
 // Timer????
 
+// Lägg till köttbit som ger ett hp
+
 using Raylib_cs;
 using System.ComponentModel;
 using System.Numerics;
@@ -38,7 +40,9 @@ string scene = "start";
 int hp = 3;
 float speed = 5;
 bool isWeaponPickedUp = false;
-bool isEnemyAlive = true;
+bool isGhostAlive = true;
+bool isSpiderAlive = true;
+
 
 
 // CHARACTER STUFF
@@ -47,9 +51,15 @@ Rectangle characterRect = new Rectangle(400, 300, 64, 64);
 Vector2 movement = new Vector2(0, 0);
 
 // ENEMY STUFF
-Texture2D enemyImage = Raylib.LoadTexture("enemy-ghost.png");
-Rectangle enemyRect = new Rectangle(400, 300, 64, 64);
-Vector2 enemyMovement = new Vector2(0, 6);
+Texture2D ghostImage = Raylib.LoadTexture("enemy-ghost.png");
+Rectangle ghostRect = new Rectangle(400, 500, 64, 64);
+Vector2 ghostMovement = new Vector2(0, 6);
+
+Texture2D spiderImage = Raylib.LoadTexture("poison-spider.png");
+Rectangle spiderRect = new Rectangle(400, 450, 64, 64);
+Vector2 spiderMovement = new Vector2(5, 0);
+// LADDA NER STÖRRE VERSION AV SPINDELN
+
 
 // WEAPON STUFF
 Texture2D weaponImage = Raylib.LoadTexture("flame-sword.png");
@@ -106,7 +116,7 @@ while (!Raylib.WindowShouldClose())
         characterRect.Y += movement.Y;
         if (CollidesWithWalls(characterRect, walls)) characterRect.Y -= movement.Y;
 
-        if (isEnemyAlive == true)
+        if (isGhostAlive == true || isSpiderAlive == true)
         {
             if (CollidesWithWalls(characterRect, wallBlock)) characterRect.X -= movement.X;
             if (CollidesWithWalls(characterRect, wallBlock)) characterRect.Y -= movement.Y;
@@ -132,20 +142,26 @@ while (!Raylib.WindowShouldClose())
 
 
 
-            enemyRect.Y += enemyMovement.Y;
-            if (enemyRect.Y >= 600 - enemyRect.Height || enemyRect.Y <= 0) enemyMovement.Y *= -1;
+            ghostRect.Y += ghostMovement.Y;
+            if (ghostRect.Y >= 600 - ghostRect.Height || ghostRect.Y <= 0) ghostMovement.Y *= -1;
 
-            if (Raylib.CheckCollisionRecs(characterRect, enemyRect))
+            if (Raylib.CheckCollisionRecs(characterRect, ghostRect))
             {
-                EnemyCollision(ref hp, isWeaponPickedUp, ref isEnemyAlive, ref characterRect);
+                EnemyCollision(ref hp, isWeaponPickedUp, ref isGhostAlive, ref characterRect);
             }
-
 
         }
         if (scene == "roomPurple")
         {
             if (Raylib.CheckCollisionRecs(characterRect, doors[2])) scene = "roomGreen";
             if (Raylib.CheckCollisionRecs(characterRect, doors[3])) scene = "Win";
+
+            spiderRect.X += spiderMovement.X;
+            if (spiderRect.X >= 600 - spiderRect.Height || spiderRect.X <= spiderRect.Width) spiderMovement.X *= -1;
+            if(Raylib.CheckCollisionRecs(characterRect, spiderRect))
+            {
+                EnemyCollision(ref hp, isWeaponPickedUp, ref isSpiderAlive, ref characterRect);
+            }
         }
         if (hp == 0) scene = "GameOver";
     }
@@ -180,15 +196,17 @@ while (!Raylib.WindowShouldClose())
 
 
         DrawWeapon(weaponImage, weaponRect, isWeaponPickedUp);
-        if (isEnemyAlive == true) DrawEnemy(enemyImage, enemyRect);
+        if (isGhostAlive == true) DrawEnemy(ghostImage, ghostRect);
     }
 
     // ROOM 3
     else if (scene == "roomPurple")
     {
         DrawRoom(characterImage, characterRect, doors, walls, hp, Color.DARKPURPLE, Color.BLACK);
-        if(isEnemyAlive == true) Raylib.DrawRectangleRec(wallBlock[0], Color.RED);
-        
+        if(isGhostAlive == true || isSpiderAlive == true) Raylib.DrawRectangleRec(wallBlock[0], Color.RED);
+
+        if (isSpiderAlive == true) DrawEnemy(spiderImage, spiderRect);
+
         Raylib.DrawRectangleRec(doors[2], Color.GREEN);
         Raylib.DrawRectangleRec(doors[3], Color.GOLD);
     }
