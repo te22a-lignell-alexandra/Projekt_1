@@ -21,3 +21,4 @@ C:\Users\alexandra.lignell\Documents\Programmering\Projekt_1\Projekt_1\obj\Debug
 C:\Users\alexandra.lignell\Documents\Programmering\Projekt_1\Projekt_1\obj\Debug\net7.0\Projekt_1.genruntimeconfig.cache
 C:\Users\alexandra.lignell\Documents\Programmering\Projekt_1\Projekt_1\obj\Debug\net7.0\ref\Projekt_1.dll
 C:\Users\alexandra.lignell\Documents\Programmering\Projekt_1\Projekt_1\bin\Debug\net7.0\papillon.png
+C:\Users\alexandra.lignell\Documents\Programmering\Projekt_1\Projekt_1\bin\Debug\net7.0\enemy-ghost.png

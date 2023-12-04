@@ -18,6 +18,7 @@
 
 // weapon, om man inte hämtar vapnet tar man skada av fienden, gdsjkf = false, om man tar den dödar
 // man fienden och tar inte skada, giufjkgr = true. ??- man måste döda fienden för att kunna vinna??
+// typ win = false om fienden lever och om win = false => skapa väggar framför vinst dörren eller nåt
 
 
 using Raylib_cs;
@@ -33,16 +34,27 @@ Raylib.SetTargetFPS(60);
 
 
 
-
+// CHARACTER STUFF
 Texture2D characterImage = Raylib.LoadTexture("papillon.png");
 Rectangle characterRect = new Rectangle(400, 300, 64, 64);
 Vector2 movement = new Vector2(0, 0);
 
+// ENEMY STUFF
+Texture2D enemyImage = Raylib.LoadTexture("enemy-ghost.png");
+Rectangle enemyRect = new Rectangle(400, 300, 64, 64);
+Vector2 enemyMovement = new Vector2(0, 0);
+
 
 // LISTS
-List<Rectangle> doors = new();
-doors.Add(new Rectangle(0, 150, 10, 100));
-doors.Add(new Rectangle(790, 500, 10, 100));
+List<Rectangle> doorsGreen = new();
+doorsGreen.Add(new Rectangle(0, 150, 10, 100));
+doorsGreen.Add(new Rectangle(600, 0, 100, 10));
+
+List<Rectangle> doorsBlack = new();
+doorsBlack.Add(new Rectangle(0, 450, 10, 100));
+
+List<Rectangle> doorsPurple = new();
+doorsPurple.Add(new Rectangle(790, 400, 10, 100));
 
 
 List<Rectangle> walls = new();
@@ -50,11 +62,11 @@ walls.Add(new Rectangle(300, 0, 50, 200));
 walls.Add(new Rectangle(0, 300, 350, 50));
 walls.Add(new Rectangle(500, 0, 50, 300));
 
-
 // VARIABLES
 string scene = "start";
 int hp = 3;
 float speed = 5;
+float enemySpeed = 2;
 
 
 
@@ -65,31 +77,52 @@ while (!Raylib.WindowShouldClose())
         scene = Start(scene);
     }
 
-    
+    // GAME START------------------------------------------
     else if (scene != "start")
     {
-        movement = Vector2.Zero;
         movement = Movement(movement, speed);
 
 
-        // CANT MOVE OUTSIDE OF SCREEN OR THROUGH WALLS
+        // COLLISION WITH WALLS
         characterRect.X += movement.X;
         if (CollidesWithWalls(characterRect, walls)) characterRect.X -= movement.X;
 
         characterRect.Y += movement.Y;
         if (CollidesWithWalls(characterRect, walls)) characterRect.Y -= movement.Y;
 
+
+        // COLLISION WITH EDGE OF SCREEN
         if (CollidesWithEdgeX(characterRect)) characterRect.X -= movement.X;
         if (CollidesWithEdgeY(characterRect)) characterRect.Y -= movement.Y;
 
-        // DOORS
-        if (Raylib.CheckCollisionRecs(characterRect, doors[0]))
+
+
+        // DOORS-------------------------------------
+        if (scene == "roomGreen")
         {
-            scene = "lilaRum";
+            if (Raylib.CheckCollisionRecs(characterRect, doorsGreen[0]))
+            {
+                scene = "roomPurple";
+            }
+            if (Raylib.CheckCollisionRecs(characterRect, doorsGreen[1]))
+            {
+                scene = "roomBlack";
+            }
         }
-        if (Raylib.CheckCollisionRecs(characterRect, doors[1]))
+        if (scene == "roomBlack")
         {
-            scene = "End";
+            enemyMovement = EnemyMovement(enemyMovement, enemyRect, enemySpeed);
+            if (Raylib.CheckCollisionRecs(characterRect, doorsBlack[0]))
+            {
+                scene = "roomGreen";
+            }
+        }
+        if (scene == "roomPurple")
+        {
+            if (Raylib.CheckCollisionRecs(characterRect, doorsPurple[0]))
+            {
+                scene = "End";
+            }
         }
     }
 
@@ -100,7 +133,7 @@ while (!Raylib.WindowShouldClose())
 
 
     Raylib.BeginDrawing();
- 
+
     if (scene == "start")
     {
         Raylib.ClearBackground(Color.BLACK);
@@ -108,23 +141,29 @@ while (!Raylib.WindowShouldClose())
     }
 
     // ROOM 1
-    else if (scene == "gröntRum")
+    else if (scene == "roomGreen")
     {
-        DrawRoom(characterImage, characterRect, doors, walls, hp, Color.GREEN, Color.GOLD, Color.DARKPURPLE, Color.GREEN);
+        DrawRoom(characterImage, characterRect, doorsGreen, walls, hp, Color.GREEN, Color.GOLD, Color.DARKPURPLE);
     }
     // ROOM 2
-    else if (scene == "lilaRum")
+    else if (scene == "roomBlack")
     {
-        DrawRoom(characterImage, characterRect, doors, walls, hp, Color.DARKPURPLE, Color.BLACK, Color.DARKPURPLE, Color.WHITE);
+        DrawRoom(characterImage, characterRect, doorsBlack, walls, hp, Color.BLACK, Color.WHITE, Color.GREEN);
+        DrawEnemy(enemyImage, enemyRect);
     }
-    // För olika dörrar eller väggar synliga i olika rum?? Kalla olika list items i varje?? Ändra, just nu finns båda alltid
-    
-    // FINAL ROOM
+    // ROOM 3
+    else if (scene == "roomPurple")
+    {
+        DrawRoom(characterImage, characterRect, doorsPurple, walls, hp, Color.DARKPURPLE, Color.BLACK, Color.WHITE);
+    }
+
+
+    // END SCENE
     else if (scene == "End")
     {
-        Raylib.ClearBackground(Color.GOLD);
-        Raylib.DrawText("YOU WON!", 280, 270, 50, Color.MAROON);
+        DrawEndScene(Color.GOLD, Color.MAROON);
     }
+
     Raylib.EndDrawing();
 }
 
@@ -138,9 +177,9 @@ while (!Raylib.WindowShouldClose())
 bool CollidesWithEdgeY(Rectangle characterRect)
 {
     if (characterRect.Y > 600 - characterRect.Height || characterRect.Y < 0)
-        {
-            return true;
-        }
+    {
+        return true;
+    }
 
     return false;
 }
@@ -148,9 +187,9 @@ bool CollidesWithEdgeY(Rectangle characterRect)
 bool CollidesWithEdgeX(Rectangle characterRect)
 {
     if (characterRect.X > 800 - characterRect.Width || characterRect.X < 0)
-        {
-            return true;
-        }
+    {
+        return true;
+    }
 
     return false;
 }
@@ -184,13 +223,20 @@ static void DrawCharacter(Texture2D characterImage, Rectangle characterRect)
     Raylib.DrawTexture(characterImage, (int)characterRect.X, (int)characterRect.Y, Color.WHITE);
 }
 
-static void DrawRoom(Texture2D characterImage, Rectangle characterRect, List<Rectangle> doors, List<Rectangle> walls, int hp, Color bkgColor, Color wallColor, Color doorColorA, Color doorColorB)
+static void DrawEnemy(Texture2D enemyImage, Rectangle enemyRect)
+{
+    Raylib.DrawTexture(enemyImage, (int)enemyRect.X, (int)enemyRect.Y, Color.WHITE);
+}
+
+static void DrawRoom(Texture2D characterImage, Rectangle characterRect, List<Rectangle> doors, List<Rectangle> walls, int hp, Color bkgColor, Color wallColor, Color doorColor)
 {
     Raylib.ClearBackground(bkgColor);
     DrawHp(hp);
 
-    Raylib.DrawRectangleRec(doors[0], doorColorA);
-    Raylib.DrawRectangleRec(doors[1], doorColorB);
+    foreach (Rectangle door in doors)
+    {
+        Raylib.DrawRectangleRec(door, doorColor);
+    }
 
     foreach (Rectangle wall in walls)
     {
@@ -198,16 +244,20 @@ static void DrawRoom(Texture2D characterImage, Rectangle characterRect, List<Rec
     }
 
     DrawCharacter(characterImage, characterRect);
+}
 
-    // foreach (Rectangle door in doors)
-    // {
-    //     Raylib.DrawRectangleRec(door, doorColor);
-    // }
+
+static void DrawEndScene(Color bkgColor, Color textColor)
+{
+    Raylib.ClearBackground(bkgColor);
+    Raylib.DrawText("YOU WON!", 280, 270, 50, textColor);
 }
 
 // ---------------------------MOVEMENT-----------------------------------------
 static Vector2 Movement(Vector2 movement, float speed)
 {
+    movement = Vector2.Zero;
+
     if (Raylib.IsKeyDown(KeyboardKey.KEY_A))
     {
         movement.X = -1;
@@ -232,13 +282,21 @@ static Vector2 Movement(Vector2 movement, float speed)
     return movement;
 }
 
+static Vector2 EnemyMovement(Vector2 enemyMovement, Rectangle enemyRect, float enemySpeed)
+{
+    if(enemyRect.Y == 600 || enemyRect.Y == 400)
+    {
+        enemySpeed = enemySpeed*-1;
+    }
 
+    return enemyMovement;
+}
 // --------------------------------START SCREEN----------------------------
 static string Start(string scene)
 {
     if (Raylib.IsKeyPressed(KeyboardKey.KEY_SPACE))
     {
-        scene = "gröntRum";
+        scene = "roomGreen";
     }
 
     return scene;
