@@ -66,7 +66,6 @@ walls.Add(new Rectangle(500, 0, 50, 300));
 string scene = "start";
 int hp = 3;
 float speed = 5;
-float enemySpeed = 1;
 
 
 
@@ -112,11 +111,7 @@ while (!Raylib.WindowShouldClose())
         if (scene == "roomBlack")
         {
             enemyRect.Y += enemyMovement.Y;
-
-            if (enemyRect.Y == 600 || enemyRect.Y == 400) enemyMovement.Y = enemyMovement.Y*-1;
-            // '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-            // '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-            // '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+            if (enemyRect.Y >= 600 - enemyRect.Width || enemyRect.Y <= 260) enemyMovement.Y = -enemyMovement.Y;
 
             if (Raylib.CheckCollisionRecs(characterRect, enemyRect)) 
             {
