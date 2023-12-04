@@ -42,7 +42,7 @@ Vector2 movement = new Vector2(0, 0);
 // ENEMY STUFF
 Texture2D enemyImage = Raylib.LoadTexture("enemy-ghost.png");
 Rectangle enemyRect = new Rectangle(400, 300, 64, 64);
-Vector2 enemyMovement = new Vector2(0, 0);
+Vector2 enemyMovement = new Vector2(0, 3);
 
 
 // LISTS
@@ -66,7 +66,7 @@ walls.Add(new Rectangle(500, 0, 50, 300));
 string scene = "start";
 int hp = 3;
 float speed = 5;
-float enemySpeed = 2;
+float enemySpeed = 1;
 
 
 
@@ -80,6 +80,7 @@ while (!Raylib.WindowShouldClose())
     // GAME START------------------------------------------
     else if (scene != "start")
     {
+        movement = Vector2.Zero;
         movement = Movement(movement, speed);
 
 
@@ -96,8 +97,7 @@ while (!Raylib.WindowShouldClose())
         if (CollidesWithEdgeY(characterRect)) characterRect.Y -= movement.Y;
 
 
-
-        // DOORS-------------------------------------
+        // DIFFERENT ROOMS-------------------------------------
         if (scene == "roomGreen")
         {
             if (Raylib.CheckCollisionRecs(characterRect, doorsGreen[0]))
@@ -108,10 +108,22 @@ while (!Raylib.WindowShouldClose())
             {
                 scene = "roomBlack";
             }
-        }
+        } 
         if (scene == "roomBlack")
         {
-            enemyMovement = EnemyMovement(enemyMovement, enemyRect, enemySpeed);
+            enemyRect.Y += enemyMovement.Y;
+
+            if (enemyRect.Y == 600 || enemyRect.Y == 400) enemyMovement.Y = enemyMovement.Y*-1;
+            // '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+            // '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+            // '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+            if (Raylib.CheckCollisionRecs(characterRect, enemyRect)) 
+            {
+                hp -= 1;
+                characterRect.X = 550;
+                characterRect.Y = 0;
+            }
             if (Raylib.CheckCollisionRecs(characterRect, doorsBlack[0]))
             {
                 scene = "roomGreen";
@@ -207,6 +219,16 @@ bool CollidesWithWalls(Rectangle characterRect, List<Rectangle> walls)
     return false;
 }
 
+// static Vector2 EnemyTurnAround(Rectangle enemyRect, Vector2 enemyMovement)
+// {
+//     if (enemyRect.Y == 600 || enemyRect.Y == 400)
+//     {
+//         enemyMovement = enemyMovement*-1;
+//     }
+    
+//     return enemyMovement;
+// }
+
 // -----------------------------------DRAW-----------------------------------
 static void DrawHp(int hp)
 {
@@ -256,8 +278,6 @@ static void DrawEndScene(Color bkgColor, Color textColor)
 // ---------------------------MOVEMENT-----------------------------------------
 static Vector2 Movement(Vector2 movement, float speed)
 {
-    movement = Vector2.Zero;
-
     if (Raylib.IsKeyDown(KeyboardKey.KEY_A))
     {
         movement.X = -1;
@@ -282,15 +302,15 @@ static Vector2 Movement(Vector2 movement, float speed)
     return movement;
 }
 
-static Vector2 EnemyMovement(Vector2 enemyMovement, Rectangle enemyRect, float enemySpeed)
-{
-    if(enemyRect.Y == 600 || enemyRect.Y == 400)
-    {
-        enemySpeed = enemySpeed*-1;
-    }
+// static Vector2 EnemyMovement(Vector2 enemyMovement, Rectangle enemyRect, float enemySpeed)
+// {
+//     if(enemyRect.Y == 600 || enemyRect.Y == 400)
+//     {
+//         enemySpeed *= -1;
+//     }
 
-    return enemyMovement;
-}
+//     return enemyMovement;
+// }
 // --------------------------------START SCREEN----------------------------
 static string Start(string scene)
 {
