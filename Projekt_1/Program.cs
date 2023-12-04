@@ -20,6 +20,8 @@
 // typ win = false om fienden lever och om win = false => skapa väggar framför vinst dörren eller nåt 
 
 
+// Timer????
+
 using Raylib_cs;
 using System.ComponentModel;
 using System.Numerics;
@@ -31,6 +33,12 @@ Raylib.SetTargetFPS(60);
 
 
 
+// VARIABLES
+string scene = "start";
+int hp = 3;
+float speed = 5;
+bool isWeaponPickedUp = false;
+bool isEnemyAlive = true;
 
 
 // CHARACTER STUFF
@@ -48,7 +56,8 @@ Texture2D weaponImage = Raylib.LoadTexture("flame-sword.png");
 Rectangle weaponRect = new Rectangle(50, 100, 64, 64);
 
 
-// LISTS
+
+// LISTS--------------------------------------------
 List<Rectangle> doors = new();
 // green room purple, black
 doors.Add(new Rectangle(0, 150, 10, 100));
@@ -68,13 +77,7 @@ walls.Add(new Rectangle(500, 0, 50, 300));
 
 List<Rectangle> wallBlock = new();
 wallBlock.Add(new Rectangle(750, 350, 50, 200));
-
-// VARIABLES
-string scene = "start";
-int hp = 3;
-float speed = 5;
-bool isWeaponPickedUp = false;
-bool isEnemyAlive = true;
+// -------------------------------------------------------------
 
 
 
@@ -84,8 +87,8 @@ bool isEnemyAlive = true;
 
 while (!Raylib.WindowShouldClose())
 {
-
-    if (scene == "start") scene = Start(scene);
+    // START SCENE
+    if (Raylib.IsKeyPressed(KeyboardKey.KEY_SPACE)) scene = "roomGreen";
 
 
 
@@ -105,8 +108,8 @@ while (!Raylib.WindowShouldClose())
 
         if (isEnemyAlive == true)
         {
-            if(CollidesWithWalls(characterRect, wallBlock)) characterRect.X -= movement.X;
-            if(CollidesWithWalls(characterRect, wallBlock)) characterRect.Y -= movement.Y;
+            if (CollidesWithWalls(characterRect, wallBlock)) characterRect.X -= movement.X;
+            if (CollidesWithWalls(characterRect, wallBlock)) characterRect.Y -= movement.Y;
         }
 
         // COLLISION WITH EDGE OF SCREEN
@@ -123,27 +126,20 @@ while (!Raylib.WindowShouldClose())
 
         if (scene == "roomBlack")
         {
+
+            if (Raylib.CheckCollisionRecs(characterRect, doors[2])) scene = "roomGreen";
             if (Raylib.CheckCollisionRecs(characterRect, weaponRect)) isWeaponPickedUp = true;
+
 
 
             enemyRect.Y += enemyMovement.Y;
             if (enemyRect.Y >= 600 - enemyRect.Height || enemyRect.Y <= 0) enemyMovement.Y *= -1;
 
-            if (Raylib.CheckCollisionRecs(characterRect, enemyRect)) 
+            if (Raylib.CheckCollisionRecs(characterRect, enemyRect))
             {
-                if (isWeaponPickedUp == false)
-                {
-                    hp -= 1;
-                    characterRect.X = 600;
-                    characterRect.Y = 0;
-                }
-                if (isWeaponPickedUp == true)
-                {
-                    isEnemyAlive = false;
-                }
+                EnemyCollision(ref hp, isWeaponPickedUp, ref isEnemyAlive, ref characterRect);
             }
 
-            if (Raylib.CheckCollisionRecs(characterRect, doors[2])) scene = "roomGreen";
 
         }
         if (scene == "roomPurple")
@@ -211,6 +207,22 @@ while (!Raylib.WindowShouldClose())
 
 
 // ------------------------------------COLLISIONS-------------------------------------------
+
+static void EnemyCollision(ref int hp, bool isWeaponPickedUp, ref bool isEnemyAlive, ref Rectangle characterRect)
+{
+    if (isWeaponPickedUp == false)
+    {
+        hp -= 1;
+        characterRect.X = 600;
+        characterRect.Y = 0;
+    }
+    if (isWeaponPickedUp == true)
+    {
+        isEnemyAlive = false;
+    }
+}
+
+
 bool CollidesWithEdgeY(Rectangle characterRect)
 {
     if (characterRect.Y > 600 - characterRect.Height || characterRect.Y < 0)
@@ -221,6 +233,7 @@ bool CollidesWithEdgeY(Rectangle characterRect)
     return false;
 }
 
+
 bool CollidesWithEdgeX(Rectangle characterRect)
 {
     if (characterRect.X > 800 - characterRect.Width || characterRect.X < 0)
@@ -230,6 +243,7 @@ bool CollidesWithEdgeX(Rectangle characterRect)
 
     return false;
 }
+
 
 bool CollidesWithWalls(Rectangle characterRect, List<Rectangle> walls)
 {
@@ -245,26 +259,24 @@ bool CollidesWithWalls(Rectangle characterRect, List<Rectangle> walls)
 }
 
 
-// -----------------------------------DRAW-----------------------------------
+// -----------------------------------DRAW SMALL THINGS-----------------------------------
 static void DrawHp(int hp)
 {
     Raylib.DrawText($"HP: {hp}", 20, 20, 30, Color.WHITE);
 }
 
-static void DrawStartText()
-{
-    Raylib.DrawText("Press SPACE to start", 200, 300, 30, Color.WHITE);
-}
 
 static void DrawCharacter(Texture2D characterImage, Rectangle characterRect)
 {
     Raylib.DrawTexture(characterImage, (int)characterRect.X, (int)characterRect.Y, Color.WHITE);
 }
 
+
 static void DrawEnemy(Texture2D enemyImage, Rectangle enemyRect)
 {
     Raylib.DrawTexture(enemyImage, (int)enemyRect.X, (int)enemyRect.Y, Color.WHITE);
 }
+
 
 static void DrawWeapon(Texture2D weaponImage, Rectangle weaponRect, bool isWeaponPickedUp)
 {
@@ -274,6 +286,16 @@ static void DrawWeapon(Texture2D weaponImage, Rectangle weaponRect, bool isWeapo
     }
 }
 
+
+static void DrawStartText()
+{
+    Raylib.DrawText("Press SPACE to start", 200, 300, 30, Color.WHITE);
+    Raylib.DrawText("Tip: Kill the monster to unlock the door", 200, 350, 20, Color.RED);
+}
+
+
+// --------------------------------DRAW SCENES/ROOMS----------------------------
+    
 static void DrawRoom(Texture2D characterImage, Rectangle characterRect, List<Rectangle> doors, List<Rectangle> walls, int hp, Color bkgColor, Color wallColor)
 {
     Raylib.ClearBackground(bkgColor);
@@ -298,6 +320,7 @@ static void DrawWinScene(Color bkgColor, Color textColor)
     Raylib.ClearBackground(bkgColor);
     Raylib.DrawText("YOU WON!", 280, 270, 50, textColor);
 }
+
 
 static void DrawGameOverScene(Color bkgColor, Color textColor)
 {
@@ -330,15 +353,4 @@ static Vector2 Movement(Vector2 movement, float speed)
     }
 
     return movement;
-}
-
-// --------------------------------START SCREEN----------------------------
-static string Start(string scene)
-{
-    if (Raylib.IsKeyPressed(KeyboardKey.KEY_SPACE))
-    {
-        scene = "roomGreen";
-    }
-
-    return scene;
 }
