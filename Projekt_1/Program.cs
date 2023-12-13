@@ -42,6 +42,7 @@ float speed = 5;
 bool isWeaponPickedUp = false;
 bool isGhostAlive = true;
 bool isSpiderAlive = true;
+bool playingTheGame = false;
 
 
 
@@ -97,65 +98,26 @@ wallBlock.Add(new Rectangle(750, 350, 50, 200));
 
 while (!Raylib.WindowShouldClose())
 {
-    // START SCENE
-    if (Raylib.IsKeyPressed(KeyboardKey.KEY_SPACE)) scene = "roomGreen";
+    // För att starta eller köra om spelet
+    if (playingTheGame == false && Raylib.IsKeyPressed(KeyboardKey.KEY_SPACE)) characterRect = ResetGame(out hp, out isWeaponPickedUp, out isGhostAlive, out isSpiderAlive, out playingTheGame, characterRect, out scene);
 
-    // GAME START------------------------------------------
-    else if (scene != "start")
+    else if (playingTheGame == true)
     {
-        movement = Vector2.Zero;
-        movement = Movement(movement, speed);
+        // Character movement
+        Movement(out movement, speed);
 
-
-        // COLLISION WITH WALLS
-        characterRect.X += movement.X;
-        if (CollidesWithWalls(characterRect, walls)) characterRect.X -= movement.X;
-
-        characterRect.Y += movement.Y;
-        if (CollidesWithWalls(characterRect, walls)) characterRect.Y -= movement.Y;
+        // For every wall the character can collide with
+        characterRect = AllWallCollisions(scene, isGhostAlive, isSpiderAlive, characterRect, movement, walls, wallBlock);
         
-        // red wall
-        if ((isGhostAlive == true || isSpiderAlive == true) && scene == "roomPurple")
-        {
-            if (CollidesWithWalls(characterRect, wallBlock)) characterRect.X -= movement.X;
-            if (CollidesWithWalls(characterRect, wallBlock)) characterRect.Y -= movement.Y;
-        }
-
-        // COLLISION WITH EDGE OF SCREEN
-        if (CollidesWithEdgeX(characterRect)) characterRect.X -= movement.X;
-        if (CollidesWithEdgeY(characterRect)) characterRect.Y -= movement.Y;
-
-
-        // DIFFERENT ROOMS-------------------------------------
-        if (scene == "roomGreen")
-        {
-            if (Raylib.CheckCollisionRecs(characterRect, doors[0])) scene = "roomPurple";
-            if (Raylib.CheckCollisionRecs(characterRect, doors[1])) scene = "roomBlack";
-        } 
-
-        if (scene == "roomBlack") RoomBlack(ref scene, ref hp, ref isWeaponPickedUp, ref isGhostAlive, ref characterRect, ref ghostRect, ref ghostMovement, weaponRect, doors);
-        if (scene == "roomPurple") RoomPurple(ref scene, ref hp, isWeaponPickedUp, ref isSpiderAlive, ref characterRect, ref spiderRect, ref spiderMovement, doors);
-        // How to loose the game
-        if (hp == 0) scene = "GameOver";
+        // Code for what happens in each room
+        AllRooms(ref scene, ref hp, ref isWeaponPickedUp, ref isGhostAlive, ref isSpiderAlive, ref playingTheGame, ref characterRect, ref ghostRect, ref ghostMovement, ref spiderRect, ref spiderMovement, weaponRect, doors);
     }
 
-    // -----------------------------------------------------------------------------
     // DRAW
-
     Raylib.BeginDrawing();
-    // Rita ut alla olika rum
-    if (scene == "start") DrawStartScene();
 
-    else if (scene == "roomGreen") DrawRoomGreen(hp, characterImage, characterRect, doors, walls);
-
-    else if (scene == "roomBlack") DrawRoomBlack(hp, isWeaponPickedUp, isGhostAlive, characterImage, characterRect, ghostImage, ghostRect, weaponImage, weaponRect, doors, walls);
-
-    else if (scene == "roomPurple") DrawRoomPurple(hp, isGhostAlive, isSpiderAlive, characterImage, characterRect, spiderImage, spiderRect, doors, walls, wallBlock);
-
-    else if (scene == "Win") DrawEndScene(Color.GOLD, Color.MAROON, "YOU WON!");
-
-    else if (scene == "GameOver") DrawEndScene(Color.MAROON, Color.GOLD, "GAME OVER!");
-
+    DrawAllRooms(scene, hp, isWeaponPickedUp, isGhostAlive, isSpiderAlive, characterImage, characterRect, ghostImage, ghostRect, spiderImage, spiderRect, weaponImage, weaponRect, doors, walls, wallBlock);
+   
     Raylib.EndDrawing();
 }
 
@@ -217,6 +179,75 @@ bool CollidesWithWalls(Rectangle characterRect, List<Rectangle> walls)
     }
 
     return false;
+}
+
+// Everything to do with collisions
+Rectangle AllWallCollisions(string scene, bool isGhostAlive, bool isSpiderAlive, Rectangle characterRect, Vector2 movement, List<Rectangle> walls, List<Rectangle> wallBlock)
+{
+    // Character can't move through walls
+    characterRect.X += movement.X;
+    if (CollidesWithWalls(characterRect, walls)) characterRect.X -= movement.X;
+
+    characterRect.Y += movement.Y;
+    if (CollidesWithWalls(characterRect, walls)) characterRect.Y -= movement.Y;
+
+    // red wall block
+    if ((isGhostAlive == true || isSpiderAlive == true) && scene == "roomPurple")
+    {
+        if (CollidesWithWalls(characterRect, wallBlock)) characterRect.X -= movement.X;
+        if (CollidesWithWalls(characterRect, wallBlock)) characterRect.Y -= movement.Y;
+    }
+
+    // Character can't move outside of the screen
+    if (CollidesWithEdgeX(characterRect)) characterRect.X -= movement.X;
+    if (CollidesWithEdgeY(characterRect)) characterRect.Y -= movement.Y;
+    return characterRect;
+}
+
+
+// ---------------------------MOVEMENT-----------------------------------------
+
+// Character movement
+static Vector2 Movement(out Vector2 movement, float speed)
+{
+    movement = Vector2.Zero;
+
+    if (Raylib.IsKeyDown(KeyboardKey.KEY_A))
+    {
+        movement.X = -1;
+    }
+    if (Raylib.IsKeyDown(KeyboardKey.KEY_D))
+    {
+        movement.X = 1;
+    }
+    if (Raylib.IsKeyDown(KeyboardKey.KEY_W))
+    {
+        movement.Y = -1;
+    }
+    if (Raylib.IsKeyDown(KeyboardKey.KEY_S))
+    {
+        movement.Y = 1;
+    }
+    if (movement.Length() > 0)
+    {
+        movement = Vector2.Normalize(movement) * speed;
+    }
+
+    return movement;
+}
+
+// Spider enemy movement
+static void SpiderMovement(ref Rectangle spiderRect, ref Vector2 spiderMovement)
+{
+    spiderRect.X += spiderMovement.X;
+    if (spiderRect.X >= 600 - spiderRect.Height || spiderRect.X <= spiderRect.Width) spiderMovement.X *= -1;
+}
+
+// Ghost enemy movement
+static void GhostMovement(ref Rectangle ghostRect, ref Vector2 ghostMovement)
+{
+    ghostRect.Y += ghostMovement.Y;
+    if (ghostRect.Y >= 600 - ghostRect.Height || ghostRect.Y <= 0) ghostMovement.Y *= -1;
 }
 
 
@@ -319,60 +350,32 @@ static void DrawEndScene(Color bkgColor, Color textColor, string text)
 {
     Raylib.ClearBackground(bkgColor);
     Raylib.DrawText(text, 280, 270, 50, textColor);
+    Raylib.DrawText("Press SPACE to play again", 250, 500, 25, textColor);
 }
 
 
-// ---------------------------MOVEMENT-----------------------------------------
-
-// Character movement
-static Vector2 Movement(Vector2 movement, float speed)
+static void DrawAllRooms(string scene, int hp, bool isWeaponPickedUp, bool isGhostAlive, bool isSpiderAlive, Texture2D characterImage, Rectangle characterRect, Texture2D ghostImage, Rectangle ghostRect, Texture2D spiderImage, Rectangle spiderRect, Texture2D weaponImage, Rectangle weaponRect, List<Rectangle> doors, List<Rectangle> walls, List<Rectangle> wallBlock)
 {
-    if (Raylib.IsKeyDown(KeyboardKey.KEY_A))
-    {
-        movement.X = -1;
-    }
-    if (Raylib.IsKeyDown(KeyboardKey.KEY_D))
-    {
-        movement.X = 1;
-    }
-    if (Raylib.IsKeyDown(KeyboardKey.KEY_W))
-    {
-        movement.Y = -1;
-    }
-    if (Raylib.IsKeyDown(KeyboardKey.KEY_S))
-    {
-        movement.Y = 1;
-    }
-    if (movement.Length() > 0)
-    {
-        movement = Vector2.Normalize(movement) * speed;
-    }
-
-    return movement;
-}
-
-// Spider enemy movement
-static void SpiderMovement(ref Rectangle spiderRect, ref Vector2 spiderMovement)
-{
-    spiderRect.X += spiderMovement.X;
-    if (spiderRect.X >= 600 - spiderRect.Height || spiderRect.X <= spiderRect.Width) spiderMovement.X *= -1;
-}
-
-// Ghost enemy movement
-static void GhostMovement(ref Rectangle ghostRect, ref Vector2 ghostMovement)
-{
-    ghostRect.Y += ghostMovement.Y;
-    if (ghostRect.Y >= 600 - ghostRect.Height || ghostRect.Y <= 0) ghostMovement.Y *= -1;
+    if (scene == "start") DrawStartScene();
+    else if (scene == "roomGreen") DrawRoomGreen(hp, characterImage, characterRect, doors, walls);
+    else if (scene == "roomBlack") DrawRoomBlack(hp, isWeaponPickedUp, isGhostAlive, characterImage, characterRect, ghostImage, ghostRect, weaponImage, weaponRect, doors, walls);
+    else if (scene == "roomPurple") DrawRoomPurple(hp, isGhostAlive, isSpiderAlive, characterImage, characterRect, spiderImage, spiderRect, doors, walls, wallBlock);
+    else if (scene == "Win") DrawEndScene(Color.GOLD, Color.MAROON, "YOU WON!");
+    else if (scene == "GameOver") DrawEndScene(Color.MAROON, Color.GOLD, "GAME OVER!");
 }
 
 
 // ------------------------ALL THE CODE THAT ISN'T DRAWING RELATED FOR EACH ROOM-------------------------
 
 // Code the purple room
-static void RoomPurple(ref string scene, ref int hp, bool isWeaponPickedUp, ref bool isSpiderAlive, ref Rectangle characterRect, ref Rectangle spiderRect, ref Vector2 spiderMovement, List<Rectangle> doors)
+static void RoomPurple(ref string scene, ref int hp, ref bool playingTheGame, bool isWeaponPickedUp, ref bool isSpiderAlive, ref Rectangle characterRect, ref Rectangle spiderRect, ref Vector2 spiderMovement, List<Rectangle> doors)
 {
     if (Raylib.CheckCollisionRecs(characterRect, doors[2])) scene = "roomGreen";
-    if (Raylib.CheckCollisionRecs(characterRect, doors[3])) scene = "Win";
+    if (Raylib.CheckCollisionRecs(characterRect, doors[3])) 
+    {
+        playingTheGame = false;
+        scene = "Win";
+    }
 
     // spider movement + collision
     SpiderMovement(ref spiderRect, ref spiderMovement);
@@ -392,4 +395,41 @@ static void RoomBlack(ref string scene, ref int hp, ref bool isWeaponPickedUp, r
     // ghost movement + collision
     GhostMovement(ref ghostRect, ref ghostMovement);
     if (Raylib.CheckCollisionRecs(characterRect, ghostRect)) EnemyCollision(ref hp, isWeaponPickedUp, ref isGhostAlive, ref characterRect);
+}
+
+
+static string RoomGreen(ref string scene, Rectangle characterRect, List<Rectangle> doors)
+{
+    if (Raylib.CheckCollisionRecs(characterRect, doors[0])) scene = "roomPurple";
+    if (Raylib.CheckCollisionRecs(characterRect, doors[1])) scene = "roomBlack";
+    return scene;
+}
+
+
+// Reset the game stats, starting or restarting the game
+static Rectangle ResetGame(out int hp, out bool isWeaponPickedUp, out bool isGhostAlive, out bool isSpiderAlive, out bool playingTheGame, Rectangle characterRect, out string scene)
+{
+    playingTheGame = true;
+    characterRect.X = 400;
+    characterRect.Y = 300;
+    hp = 3;
+    isGhostAlive = true;
+    isSpiderAlive = true;
+    isWeaponPickedUp = false;
+    scene = "roomGreen";
+
+    return characterRect;
+}
+
+static void AllRooms(ref string scene, ref int hp, ref bool isWeaponPickedUp, ref bool isGhostAlive, ref bool isSpiderAlive, ref bool playingTheGame, ref Rectangle characterRect, ref Rectangle ghostRect, ref Vector2 ghostMovement, ref Rectangle spiderRect, ref Vector2 spiderMovement, Rectangle weaponRect, List<Rectangle> doors)
+{
+    if (scene == "roomGreen") RoomGreen(ref scene, characterRect, doors);
+    if (scene == "roomBlack") RoomBlack(ref scene, ref hp, ref isWeaponPickedUp, ref isGhostAlive, ref characterRect, ref ghostRect, ref ghostMovement, weaponRect, doors);
+    if (scene == "roomPurple") RoomPurple(ref scene, ref hp, ref playingTheGame, isWeaponPickedUp, ref isSpiderAlive, ref characterRect, ref spiderRect, ref spiderMovement, doors);
+    // Loosing the game
+    if (hp == 0)
+    {
+        playingTheGame = false;
+        scene = "GameOver";
+    }
 }
